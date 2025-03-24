@@ -1,31 +1,29 @@
 #game.py
-#3/8/2025
+#3/23/2025
 #Emma Griffin
 
 import gamefunctions
+import random
 
 player_name = input("Enter your name: ")
 welcome_message = gamefunctions.print_welcome(player_name)
 print(welcome_message)
-print("Items for purchase")
-print(gamefunctions.print_shop_menu('Sword', 10, 'Apple', 5))
-purchase_choice = input("What would you like to purchase? ")
-if purchase_choice.lower() == "apple":
-    result = gamefunctions.purchase_item(5.00, 10.00)
-    print("Amount purchased:",result[0])
-    print(f'Leftover money: ${result[1]:.2f}')
-elif purchase_choice.lower() == "sword":
-    result = gamefunctions.purchase_item(10.00,10.00)
-    print("Amount purchased:",result[0])
-    print(f'Leftover money: ${result[1]:.2f}')
-print()
-monster_encounter = gamefunctions.new_random_monster()
-print(monster_encounter['description'])
-print(f'About this monster:')
-print(f'  Name: {monster_encounter['name']}')
-print(f'  Health: {monster_encounter['health']}')
-print(f'  Power: {monster_encounter['power']}')
-print(f'  Money: {monster_encounter['money']}')
 
-
-        
+def mainLoop():
+    userHP = 30
+    userGold = 10
+    while True: 
+        print(f'You are in a town.\nCurrent HP: {userHP}, Current Gold: {userGold}\n')
+        print('What would you like to do?')
+        print(f'1) Leave town (Fight a monster)\n2) Sleep (Restore HP for 5 gold)\n3) Quit\n')
+        userChoice = input("Enter a number to make your selection: ")
+        if userChoice == "1":
+            userHP, userGold = gamefunctions.fight_monster(userHP, userGold)
+        elif userChoice == "2":
+            userHP, userGold = gamefunctions.sleep(userHP, userGold)
+        elif userChoice == "3":
+            print("Thanks for playing, goodbye!")
+            break
+        else:
+            print(f"\nInvalid choice. Please select 1, 2, or 3.\n")
+mainLoop()
