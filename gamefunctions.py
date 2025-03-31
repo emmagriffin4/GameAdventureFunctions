@@ -109,24 +109,26 @@ def displayFightStatistics(userHP, monsterHP):
        
 def getUserFightOptions():
     """
-    Displays a menu during a monster fight in which the player can chose to keep fighting or run away
+    Displays a menu during a monster fight in which the player can chose to keep fighting, use an item, or run away
     Parameters:
         None
     Returns:
-        None
+        user chocie
     """
     print("What would you like to do?")
-    print("1) Continue fighting\n2) Run away\n")
+    print("1) Attack\n2) Use item\n3) Run away\n")
     while True:
-        userOption = input("Enter 1 or 2:")
+        userOption = input("Enter 1, 2, or 3: ")
         if userOption == "1":
             return "fight"
         elif userOption == "2":
+            return "use"
+        elif userOption == "3":
             return "run"
         else:
             print("Invalid. Please select 1 or 2.")
 
-def fight_monster(userHP, userGold):
+def fight_monster(userHP, userGold, selected_item):
     """
     This function contains the code for a monster fight. The user and monster both deal random power
     and have random health.
@@ -140,8 +142,12 @@ def fight_monster(userHP, userGold):
     monster_encounter = new_random_monster()
     monsterHP = monster_encounter['health']
     monster_damage = monster_encounter['power']
-    user_damage = random.randint(5,10)
-    print(f'\nYou are fighting a {monster_encounter['name']} with {monsterHP} HP!\nYou both take your first hits!')
+    if selected_item is not None and selected_item.get("type") == "weapon" and selected_item.get("currentDurability") > 0:
+        user_damage = random.randint(5,10)
+        print(f'\nYou are fighting a {monster_encounter['name']} (HP:{monsterHP}) with your sword!\nYour damage is increased!')
+    else:
+        user_damage = random.randint(1,4)
+        print(f'\nYou are fighting a {monster_encounter['name']} (HP: {monsterHP}) without a weapon!\nYou both take your first hits!')
     while userHP > 0 and monsterHP > 0:
         monsterHP -= user_damage
         userHP -= monster_damage
@@ -152,12 +158,29 @@ def fight_monster(userHP, userGold):
         elif monsterHP <= 0:
             print(f"Congratulations! You have defeated the {monster_encounter['name']}!\n")
             userGold += random.randint (10, 20) #User earns a random amount of gold if they win
+            selected_item['currentDurability'] = 0
             break
         choice = getUserFightOptions()
         if choice == "run":
             print (f'\nYou ran away.\n')
             break
-    return userHP, userGold
+        elif choice == "use":
+            print(f"\nYour inventory:")
+            for index, item in enumerate(inventory):
+                print(f"{index+1}) {item['name']} - Type: {item['type']}")
+            item_choice = int(input("Enter the number of the item to use: "))
+            if item_choice > 0 and item_choice <= len(inventory):
+                item = inventory[item_choice - 1]
+            if item['name'].lower() == 'magic rock':
+                print(f'\nYou used the magic rock and defeated the monster!\n')
+                monsterHP = 0
+                userGold += random.randint (10, 20)
+                break
+            else:
+                if item['type'] == "weapon" and item['currentDurability'] > 0:
+                    user_damage = random.randint(5, 10)
+                    print(f'Your damage has increased!')              
+    return userHP, userGold, selected_item
 
 def sleep(userHP, userGold):
     """
@@ -176,7 +199,32 @@ def sleep(userHP, userGold):
     else:
         print(f"\nNot enough gold to sleep.\n")
     return userHP, userGold
-                   
+
+inventory = [
+        {"name": "Map", "type": "tool", "description": "A map of the area."},
+        {"name": "Magic rock", "type": "misc.", "note": "Can be used to kill a monster instantly!"}
+            ]
+
+def equip_item(inventory, item_type="weapon"):
+    itemsToEquip = [item for item in inventory if item["type"] == item_type]
+    if not itemsToEquip:
+        print(f"No {item_type}s in inventory")
+        return None
+    print(f'Select a {item_type} to equip: ')
+    for index, item in enumerate(itemsToEquip):
+        print(f'{index+1}) {item["name"]} (Durability: {item["currentDurability"]})')
+    userEquip = int(input(f'Enter the number to equip (0 to cancel) '))
+    if userEquip == 0:
+        return None
+    elif 0 < userEquip <= len(itemsToEquip):
+        selected_item = itemsToEquip[userEquip - 1]
+        print(f'Equipped {selected_item["name"]}.')
+        return selected_item
+    else:
+        print("Invalid selection")
+        return None
+    pass
+    
 def test_functions():
     num_purchased, leftover_money = purchase_item(1.23, 10, 3)
     print(num_purchased)
