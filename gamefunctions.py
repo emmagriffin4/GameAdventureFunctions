@@ -1,5 +1,5 @@
 #gamefunctions.py
-#Updated 3/23/2025
+#Updated 3/30/2025
 #Emma Griffin
 
 """This module consists of various gamefunctions for a text-based game.
