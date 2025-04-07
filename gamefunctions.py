@@ -9,6 +9,7 @@ new_random_monster, print_welcome, and print_shop_menu."""
 
 import math
 import random
+import json
 
 def purchase_item(itemPrice: float, startingMoney: float, quantityToPurchase: int=1):
     """
@@ -128,7 +129,7 @@ def getUserFightOptions():
         else:
             print("Invalid. Please select 1 or 2.")
 
-def fight_monster(userHP, userGold, selected_item):
+def fight_monster(userHP, userGold, selected_item, inventory):
     """
     This function contains the code for a monster fight. The user and monster both deal random power
     and have random health.
@@ -154,12 +155,18 @@ def fight_monster(userHP, userGold, selected_item):
         displayFightStatistics(userHP, monsterHP)
         if userHP <= 0:
             print(f"You have been defeated by the {monster_encounter['name']}!\n")
+            if selected_item and selected_item.get('type') == 'weapon':
+                selected_item['currentDurability'] -= 1
+                print(f"Current {selected_item['name']} durability: {selected_item['currentDurability']}")
             break
         elif monsterHP <= 0:
             print(f"Congratulations! You have defeated the {monster_encounter['name']}!\n")
             userGold += random.randint (10, 20) #User earns a random amount of gold if they win
-            selected_item['currentDurability'] = 0
-            break
+            if selected_item and selected_item.get('type') == 'weapon':
+                selected_item['currentDurability'] -= random.randint(2,5)
+                if selected_item['currentDurability'] <= 0:
+                    print(f"Your {selected_item['name']} has broken!")
+                break
         choice = getUserFightOptions()
         if choice == "run":
             print (f'\nYou ran away.\n')
@@ -168,19 +175,26 @@ def fight_monster(userHP, userGold, selected_item):
             print(f"\nYour inventory:")
             for index, item in enumerate(inventory):
                 print(f"{index+1}) {item['name']} - Type: {item['type']}")
+            print()
             item_choice = int(input("Enter the number of the item to use: "))
-            if item_choice > 0 and item_choice <= len(inventory):
-                item = inventory[item_choice - 1]
-            if item['name'].lower() == 'magic rock':
-                print(f'\nYou used the magic rock and defeated the monster!\n')
-                monsterHP = 0
-                userGold += random.randint (10, 20)
-                break
+            if item_choice == 0:
+                continue
+            elif 0 < item_choice <= len(inventory):
+                selected_item = inventory[item_choice - 1]
+                print(f"Equipped {selected_item['name']}.")
+                if selected_item['type'] == 'weapon' and selected_item['currentDurability'] > 0:
+                    user_damage = random.randint(5, 10)
+                    print(f'Your damage has increased!')
+                if selected_item['name'].lower() == 'magic rock':
+                    print(f'\nYou used the magic rock and defeated the monster!\n')
+                    monsterHP = 0
+                    userGold += random.randint (10, 20)
+                    break
             else:
                 if item['type'] == "weapon" and item['currentDurability'] > 0:
                     user_damage = random.randint(5, 10)
                     print(f'Your damage has increased!')              
-    return userHP, userGold, selected_item
+    return userHP, userGold, selected_item, inventory
 
 def sleep(userHP, userGold):
     """
@@ -205,25 +219,51 @@ inventory = [
         {"name": "Magic rock", "type": "misc.", "note": "Can be used to kill a monster instantly!"}
             ]
 
-def equip_item(inventory, item_type="weapon"):
-    itemsToEquip = [item for item in inventory if item["type"] == item_type]
-    if not itemsToEquip:
-        print(f"No {item_type}s in inventory")
+def save_game(userHP, userGold, inventory, filename="save_game.json"):
+    """
+    Saves the game state to a file.
+    Parameters:
+        userHP: the current HP of the player to be saved
+        userGold: the current amount of gold the player has to be saved
+        inventory: the current inventory of the player to be saved
+        filename: the name of the file to store the information (default is save_game)
+    Returns:
+        none
+    """
+    game_data = {"userHP": userHP,
+                 "userGold": userGold,
+                 "inventory": inventory}
+    json_string = json.dumps(game_data, indent=4)
+    try:
+        with open(filename, 'w') as file:
+            file.write(json_string)
+        print(f'Game saved to {filename}.')
+    except Exception as e:
+        print(f'An error occurred while saving: {e}')
+
+def load_game(filename="save_game.json"):
+    """
+    Loads the game state from a file.
+    Parameters:
+        filename: the name of the file containing the saved information
+    Returns:
+        game_data: returns the information saved in game_data if it exists
+        none: returns none if there is no previously saved game data
+    """
+    try:
+        with open(filename, 'r') as file:
+            json_string = file.read()
+            game_data = json.loads(json_string)
+            print(f'Game loaded from {filename}.')
+            return game_data
+    except FileNotFoundError:
+        print(f"Save file not found. Starting new game..")
         return None
-    print(f'Select a {item_type} to equip: ')
-    for index, item in enumerate(itemsToEquip):
-        print(f'{index+1}) {item["name"]} (Durability: {item["currentDurability"]})')
-    userEquip = int(input(f'Enter the number to equip (0 to cancel) '))
-    if userEquip == 0:
+    except json.JSONDecodeError:
+        print(f"Error loading save file.")
         return None
-    elif 0 < userEquip <= len(itemsToEquip):
-        selected_item = itemsToEquip[userEquip - 1]
-        print(f'Equipped {selected_item["name"]}.')
-        return selected_item
-    else:
-        print("Invalid selection")
-        return None
-    pass
+
+
     
 def test_functions():
     num_purchased, leftover_money = purchase_item(1.23, 10, 3)
