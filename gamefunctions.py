@@ -1,5 +1,5 @@
 #gamefunctions.py
-#Updated 3/30/2025
+#Updated 4/6/2025
 #Emma Griffin
 
 """This module consists of various gamefunctions for a text-based game.
@@ -10,6 +10,8 @@ new_random_monster, print_welcome, and print_shop_menu."""
 import math
 import random
 import json
+import pygame
+import time
 
 def purchase_item(itemPrice: float, startingMoney: float, quantityToPurchase: int=1):
     """
@@ -264,7 +266,6 @@ def load_game(filename="save_game.json"):
         return None
 
 
-    
 def test_functions():
     num_purchased, leftover_money = purchase_item(1.23, 10, 3)
     print(num_purchased)
