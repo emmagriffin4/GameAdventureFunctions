@@ -1,10 +1,11 @@
 #game.py
-#4/6/2025
+#4/20/2025
 #Emma Griffin
 
 import gamefunctions
 import random
 from mapmode import start_map_mode
+from wanderingMonster import new_wandering_monster
 import sys
 
 def initial_menu():
@@ -29,7 +30,12 @@ def initial_menu():
         save_choice = input('Would you like to specifiy a filename? (y/n) ')
         if save_choice.lower() == 'y':
             filename = input('Enter your filename: ')
+        elif save_choice.lower() == 'n':
+            filename = 'Unnamed save'
+        else:
+            print('Invalid option')
         gamefunctions.save_game(userHP, userGold, inventory, filename)
+        
         
     player_name = input("Enter your name: ")
     welcome_message = gamefunctions.print_welcome(player_name)
@@ -45,17 +51,29 @@ def mainLoop(userHP, userGold, selected_item, inventory,filename):
         userChoice = input("Enter a number to make your selection: ")
         
         if userChoice == "1":
-            result = start_map_mode()
+            result = start_map_mode() 
             if result == "town":
                 print(f'\nYou returned to town.')
                 continue
             elif result == "monster":
-                outcome = gamefunctions.fight_monster(userHP, userGold, selected_item, inventory)
+                from mapmode import map_state
+                monster = map_state['current_monster']
+                outcome = gamefunctions.fight_monster(userHP, userGold, selected_item, inventory, monster)
                 if isinstance(outcome, tuple) and len(outcome) == 4:
                     userHP, userGold, selected_item, inventory = outcome
+
+                    if monster in map_state['monsters']:
+                        map_state['monsters'].remove(monster)
+                    
+                    if not map_state['monsters']:
+                        TOWN_POS = (0,0)
+                        occupied = {tuple(map_state['player_pos']), TOWN_POS}
+                        monster1 = new_wandering_monster(occupied)
+                        occupied.add(monster1.location)
+                        monster2 = new_wandering_monster(occupied)
+                        map_state['monsters'] = [monster1, monster2]
                 else:
                     print("Unexpected battle outcome")
-                result = start_map_mode()
                 if result == "town":
                      print('Back in town')
             

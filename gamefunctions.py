@@ -1,5 +1,5 @@
 #gamefunctions.py
-#Updated 4/6/2025
+#Updated 4/20/2025
 #Emma Griffin
 
 """This module consists of various gamefunctions for a text-based game.
@@ -34,39 +34,6 @@ def purchase_item(itemPrice: float, startingMoney: float, quantityToPurchase: in
         num_purchased = 0
     return num_purchased, leftover_money
 
-def new_random_monster():
-    """
-    Generates a random monster that the player might encounter.
-    Parameters:
-        None
-    Returns:
-        monster: Returns the name, description, and health, power, and money stats of the selected monster.
-    """
-    monsters = [ {'name': 'Dragon',
-                  'description': 'You see a dragon flying near a mountain.',
-                  'health_range': random.randint(20, 50),
-                  'power_range': random.randint(5, 15),
-                  'money_range': random.randint(300, 500) },
-                 {'name': 'Siren',
-                  'description': 'You hear a beautiful song near the water.',
-                  'health_range': random.randint(15, 30),
-                  'power_range': random.randint(3, 8),
-                  'money_range': random.randint(30, 50) },
-                 {'name': 'Centaur',
-                  'description': 'You discover a lone centaur hunting in the woods.',
-                  'health_range': random.randint(30, 40),
-                  'power_range': random.randint(5, 10),
-                  'money_range': random.randint(20, 40) } ]
-    selected_monster = random.choice(monsters)
-    health = selected_monster['health_range']
-    power = selected_monster['power_range']
-    money = selected_monster['money_range']
-    monster = {'name': selected_monster['name'],
-               'description': selected_monster['description'],
-               'health': health,
-               'power': power,
-               'money': money}
-    return monster
 
 def print_welcome(name: str, width: int=20):
     """
@@ -131,44 +98,53 @@ def getUserFightOptions():
         else:
             print("Invalid. Please select 1 or 2.")
 
-def fight_monster(userHP, userGold, selected_item, inventory):
+def fight_monster(userHP, userGold, selected_item, inventory, monster):
     """
     This function contains the code for a monster fight. The user and monster both deal random power
     and have random health.
     Parameters:
         userHP (str): The health of the user
         userGold (str): The amount of gold the user has
+        selected_item (str): The item the player might have selected
+        inventory (str): The inventory of the user
+        monster(dictionary): The information of the monster the player is fighting, taken from the WanderingMonster.py file
     Returns:
         userHP: The users HP after the fight is complete or the user has fled
         userGold: The amount of gold the user has, updated if the user defeats the monster and wins gold
+        selected_item: returns the selected_item information such as an updated durability
+        inventory: returns the players updated inventory
     """
-    monster_encounter = new_random_monster()
-    monsterHP = monster_encounter['health']
-    monster_damage = monster_encounter['power']
+    
+    monster_encounter = monster
+    monsterHP = monster_encounter.health
+    monster_damage = monster_encounter.power
+    monster_name = monster_encounter.monster_type
+    monster_money = monster_encounter.gold
+    
     if selected_item is not None and selected_item.get("type") == "weapon" and selected_item.get("currentDurability") > 0:
         user_damage = random.randint(5,10)
-        print(f'\nYou are fighting a {monster_encounter['name']} (HP:{monsterHP}) with your sword!\nYour damage is increased!')
+        print(f'\nYou are fighting a {monster_name} (HP:{monsterHP}) with your sword!\nYour damage is increased!')
     else:
         user_damage = random.randint(1,4)
-        print(f'\nYou are fighting a {monster_encounter['name']} (HP: {monsterHP}) without a weapon!\nYou both take your first hits!')
+        print(f'\nYou are fighting a {monster_name} (HP: {monsterHP}) without a weapon!\nYou both take your first hits!')
     while userHP > 0 and monsterHP > 0:
         monsterHP -= user_damage
         userHP -= monster_damage
         displayFightStatistics(userHP, monsterHP)
         if userHP <= 0:
-            print(f"You have been defeated by the {monster_encounter['name']}!\n")
+            print(f"You have been defeated by the {monster_name}!\n")
             if selected_item and selected_item.get('type') == 'weapon':
                 selected_item['currentDurability'] -= 1
                 print(f"Current {selected_item['name']} durability: {selected_item['currentDurability']}")
             break
         elif monsterHP <= 0:
-            print(f"Congratulations! You have defeated the {monster_encounter['name']}!\n")
-            userGold += random.randint (10, 20) #User earns a random amount of gold if they win
+            print(f"Congratulations! You have defeated the {monster_name}!\n")
+            userGold += monster_money
             if selected_item and selected_item.get('type') == 'weapon':
                 selected_item['currentDurability'] -= random.randint(2,5)
                 if selected_item['currentDurability'] <= 0:
-                    print(f"Your {selected_item['name']} has broken!")
-                break
+                    print(f"Your {selected_item['name']} has broken!") 
+            break
         choice = getUserFightOptions()
         if choice == "run":
             print (f'\nYou ran away.\n')
