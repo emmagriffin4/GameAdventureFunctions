@@ -23,6 +23,27 @@ map_state = {
     'move_counter': 0
 }
 
+try:
+    player_image = pygame.image.load('images/player.png')
+except (pygame.error, FileNotFoundError):
+    player_image = None
+
+try:
+    dragon_image = pygame.image.load('images/dragon.png')
+except (pygame.error, FileNotFoundError):
+    dragon_image = None
+
+try:
+    siren_image = pygame.image.load('images/siren.png')
+except (pygame.error, FileNotFoundError):
+    siren_image = None
+
+try:
+    centaur_image = pygame.image.load('images/centaur.png')
+except (pygame.error, FileNotFoundError):
+    centaur_image = None
+
+
 def start_map_mode():
     """
     Starts the map mode for the player to interact with
@@ -58,9 +79,20 @@ def start_map_mode():
             mx, my = monster.location
             m_rect = pygame.Rect(mx*TILE_SIZE, my*TILE_SIZE, TILE_SIZE, TILE_SIZE)
             pygame.draw.circle(screen, monster.color, m_rect.center, TILE_SIZE//3)
-
+            if monster.monster_type == 'dragon' and dragon_image:
+                screen.blit(dragon_image, m_rect)
+            elif monster.monster_type == 'siren' and siren_image:
+                screen.blit(siren_image, m_rect)
+            elif monster.monster_type == 'centaur' and centaur_image:
+                screen.blit(centaur_image, m_rect)
+            else:
+                pygame.draw.rect(screen, RED, m_rect)
+            
         player_rect = pygame.Rect(player_x * TILE_SIZE, player_y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        pygame.draw.rect(screen, BLUE, player_rect)
+        if player_image:
+            screen.blit(player_image, player_rect.topleft)
+        else:
+            pygame.draw.rect(screen, BLUE, player_rect)
 
     while running:
         draw_grid()
@@ -115,3 +147,12 @@ def start_map_mode():
 
 
         clock.tick(30)
+def load_image(path):
+    try:
+        img = pygame.image.load(path)
+        print(f"Loaded {path} successfully!")
+        return img
+    except (pygame.error, FileNotFoundError) as e:
+        print(f"Failed to load {path}: {e}")
+        return None
+
