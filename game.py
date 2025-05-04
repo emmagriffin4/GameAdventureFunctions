@@ -1,5 +1,5 @@
 #game.py
-#4/20/2025
+#5/4/2025
 #Emma Griffin
 
 import gamefunctions
@@ -44,18 +44,22 @@ def initial_menu():
     return userHP, userGold, inventory, filename, has_loaded_game
 
 def mainLoop(userHP, userGold, selected_item, inventory,filename):
-    while True: 
-        print(f'You are in a town.\nCurrent HP: {userHP}, Current Gold: {userGold}\n')
-        print('What would you like to do?')
-        print(f'1) Leave town (Fight a monster)\n2) Sleep (Restore HP for 5 gold)\n3) View player menu\n4) Save and quit\n')
-        userChoice = input("Enter a number to make your selection: ")
-        
+    in_town = True
+    
+    while True:
+        if in_town:
+            print(f'You are in a town.\nCurrent HP: {userHP}, Current Gold: {userGold}\n')
+            print('What would you like to do?')
+            print(f'1) Leave town (Fight a monster)\n2) Sleep (Restore HP for 5 gold)\n3) View player menu\n4) Save and quit\n')
+            userChoice = input("Enter a number to make your selection: ")
+        else:
+            userChoice == "1"
+            
         if userChoice == "1":
+            in_town = False
             result = start_map_mode() 
-            if result == "town":
-                print(f'\nYou returned to town.')
-                continue
-            elif result == "monster":
+    
+            if result == "monster":
                 from mapmode import map_state
                 monster = map_state['current_monster']
                 outcome = gamefunctions.fight_monster(userHP, userGold, selected_item, inventory, monster)
@@ -74,8 +78,15 @@ def mainLoop(userHP, userGold, selected_item, inventory,filename):
                         map_state['monsters'] = [monster1, monster2]
                 else:
                     print("Unexpected battle outcome")
-                if result == "town":
-                     print('Back in town')
+                    
+            elif result == "npc":
+                from mapmode import map_state
+                npc = map_state['current_npc']
+                print(f'\nYou meet {npc.name}.\nThey say: "{npc.message}"\n')
+
+            elif result == "town":
+                print(f'Returned to town\n')
+                in_town = True
             
         elif userChoice == "2":
             userHP, userGold = gamefunctions.sleep(userHP, userGold)

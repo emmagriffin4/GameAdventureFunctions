@@ -20,7 +20,8 @@ TOWN_POS = (0, 0)
 map_state = {
     'player_pos': [0, 0],
     'monsters' : [],
-    'move_counter': 0
+    'move_counter': 0,
+    'npcs': []
 }
 
 try:
@@ -44,6 +45,18 @@ except (pygame.error, FileNotFoundError):
     centaur_image = None
 
 
+class NPC:
+    def __init__(self, name, location, message, image_path=None):
+        self.name = name
+        self.location = location
+        self.message = message
+        self.image = None
+        if image_path:
+            try:
+                self.image = pygame.image.load(image_path)
+            except (pygame.error, FileNotFoundError) as e:
+                print(f'Failed to load NPC image ({image_path}): {e}')
+            
 def start_map_mode():
     """
     Starts the map mode for the player to interact with
@@ -64,6 +77,11 @@ def start_map_mode():
         occupied.add(monster1.location)
         monster2 = new_wandering_monster(occupied)
         map_state['monsters'] = [monster1, monster2]
+
+    if not map_state['npcs']:
+        npc1 = NPC("Old Greybeard", (2,3), "Beware of the flying beasts!",'images/oldman.png')
+        npc2 = NPC("Magic Trader", (5,5), "I'll trade you special items for gold.. someday.", 'images/magictrader.png')
+        map_state['npcs'] = [npc1, npc2]
 
     def draw_grid():
         screen.fill(WHITE)
@@ -87,6 +105,15 @@ def start_map_mode():
                 screen.blit(centaur_image, m_rect)
             else:
                 pygame.draw.rect(screen, RED, m_rect)
+
+        for npc in map_state['npcs']:
+            nx, ny = npc.location
+            pos = (nx*TILE_SIZE, ny*TILE_SIZE)
+
+            if npc.image:
+                screen.blit(npc.image, pos)
+            else:
+                pygame.draw.circle(screen, (0,0,0), (pos[0] + TILE_SIZE//2, pos[1] + TILE_SIZE//2), TILE_SIZE//4)
             
         player_rect = pygame.Rect(player_x * TILE_SIZE, player_y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         if player_image:
@@ -128,6 +155,7 @@ def start_map_mode():
                     if map_state['move_counter'] % 2 == 0:
                         occupied = {monster.location for monster in map_state['monsters']}
                         occupied.add(TOWN_POS)
+                        occupied.update(npc.location for npc in map_state['npcs'])
                         for monster in map_state['monsters']:
                             monster.move(occupied)
 
@@ -141,6 +169,13 @@ def start_map_mode():
                             map_state['player_pos'] = [player_x, player_y]
                             pygame.quit()
                             return 'monster'
+                        
+                    for npc in map_state['npcs']:
+                        if (player_x, player_y) == npc.location:
+                            map_state['current_npc'] = npc
+                            map_state['player_pos'] = [player_x, player_y]
+                            pygame.quit()
+                            return 'npc'
                 
                 map_state['player_pos'] = [player_x, player_y]
 
